@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>Connect 4</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+    <h1 id="winner"> </h1>
+		<script src="js/three.js"></script>
+		<script>
+			// Our Javascript will go here.
+      var camera, scene, renderer, geometry, material, cylinder, group, column, columns, currentColumn, currentPlayer, rotation, spotsLeft, yellowAudioElement, yellowAudioSource, redAudioElement, redAudioSource; 
+      
+      init();
+			animate();
+      
+      function init() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 200 );
+        camera.position.y = 75;
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+        renderer = new THREE.WebGLRenderer();
+        
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        document.body.appendChild( renderer.domElement );
+        
+        rotation = "positive";
+        spotsLeft = 42;
+        
+        columns = new Array();
+        
+        //Add axis helper green-y red-x blue-z
+        //var axisHelper = new THREE.AxisHelper( 25 );
+        //scene.add( axisHelper );
+        
+        // Create objects 
+        for (var x = 0; x < 7; x++){
+          column = new Array();
+          for (var z = 0; z< 6; z++){
+            geometry = new THREE.CylinderGeometry( 5, 5, 5, 8 );
+            material = new THREE.MeshBasicMaterial( {wireframe:true} );
+            cylinder = new THREE.Mesh( geometry, material );
+            cylinder.position.x = x*10 + -30;
+            cylinder.position.z = z*10 + -25;
+            scene.add( cylinder );
+            column.push({mesh:cylinder, score:0});         
+          }
+          columns.push({column:column, score:0});
+        }
+        
+        //Initialize player to yellow 
+        currentPlayer = "yellow";
+        
+        //Set first column to blue
+        currentColumn = 0;
+        
+        changeColumnToBlue();
+        
+        //Add event listeners
+        window.addEventListener( 'keydown', initKeyDownEvents);
+        
+        //Create sound sources
+        yellowAudioElement = document.createElement('audio');
+        yellowAudioSource = document.createElement('source');
+        yellowAudioSource.src = 'sounds/yellowSound.mp3';
+        yellowAudioElement.appendChild(yellowAudioSource);
+        
+        redAudioElement = document.createElement('audio');
+        redAudioSource = document.createElement('source');
+        redAudioSource.src = 'sounds/redSound.mp3';
+        redAudioElement.appendChild(redAudioSource);
+      }
+      
+      function changeColumnToWhite() {
+        columns[currentColumn].column.forEach(function(item, index, array){
+          if(item.score === 0)
+          {
+            item.mesh.material.color.setHex(0xffffff);
+          }
+        });
+      }
+      
+      function changeColumnToBlue() {
+        columns[currentColumn].column.forEach(function(item, index, array){
+          if(item.score === 0)
+          {
+            item.mesh.material.color.setHex(0x00ccff);
+          }
+        });
+      }
+      
+      function animate() {
+        requestAnimationFrame( animate );
+        rotate();
+        renderer.render( scene, camera );
+      }
+      
+      function rotate() {
+        if (rotation === "positive") {
+          scene.rotation.z += 0.005;
+          if (scene.rotation.z >= 0.6) {
+            rotation = "negative";
+          }
+        }
+        else if (rotation === "negative"){
+          scene.rotation.z -= 0.005;
+          if (scene.rotation.z <= -0.6) {
+            rotation = "positive";
+          }
+        }
+      }
+      
+      function checkScore(column, row) {
+      console.log("Checking score");
+        // Check current column
+        (function() {
+        var columnScore = 0;
+          for (var currentObject = row; currentObject < columns[column].column.length; currentObject++){
+            if (columnScore === 0) {
+              columnScore += columns[column].column[currentObject].score;
+            }
+            
+            else if (columns[column].column[currentObject].score === -1) {
+              //console.log("Adding yellow score");
+
+              if(columnScore > 0) {
+                columnScore = -1;
+              }
+              else {
+                columnScore += -1;
+              }
+              //console.log("Current score " + columnScore);
+            }
+            
+            else if (columns[column].column[currentObject].score === 1) {
+              //console.log("Adding yellow score");
+              if(columnScore > 0) {
+                columnScore += 1;
+              }
+              else {
+                columnScore = 1;
+              }
+            }
+            
+            if (columnScore === 4) {
+              console.log("Red player wins");
+              gameOver("red");
+              break;
+            }
+            if (columnScore === -4) {
+              console.log("Yellow player wins");
+              gameOver("yellow");
+              break;
+            }          
+          }
+        })(); 
+           
+        (function(){
+          var rowScore = 0;
+          var startColumn = 0;
+          var endColumn = columns.length - 1;
+          if((column - 3) >= startColumn)
+          {
+            startColumn = column -3;
+          }
+          
+          if((column + 3) <= endColumn)
+          {
+            endColumn = column + 3;
+          }
+          for (var currentObject = startColumn ; currentObject <= endColumn; currentObject++){
+            if (rowScore === 0) {
+              rowScore += columns[currentObject].column[row].score;
+            }
+            
+            else if (columns[currentObject].column[row].score === -1) {
+              //console.log("Adding yellow score");
+
+              if(rowScore > 0) {
+                rowScore = -1;
+              }
+              else {
+                rowScore += -1;
+              }
+              //console.log("Current row score " + rowScore);
+            }
+            
+            else if (columns[currentObject].column[row].score === 1) {
+              console.log("Adding yellow score");
+              if(rowScore > 0) {
+                rowScore += 1;
+              }
+              else {
+                rowScore = 1;
+              }
+              //console.log("Current row score " + rowScore);
+            }
+            
+            if (rowScore === 4) {
+              console.log("Red player wins");
+              gameOver("red");
+              break;
+            }
+            if (rowScore === -4) {
+              console.log("Yellow player wins");
+              gameOver("yellow");
+              break;
+            }          
+          }
+        })();
+      
+        // Check forward diagonals..........................
+        var startColumn = column;
+        var endColumn = column;
+        var startRow = row;
+        var endRow = row;
+        var i = 0;
+        while(i < 3)
+        {
+          if((startColumn - 1) >= 0 && (startRow + 1) < columns[0].column.length){
+            startColumn -=1;
+            startRow +=1;
+          }
+          if((endColumn + 1) < columns.length && (endRow - 1) >= 0) {
+            endColumn +=1;
+            endRow -=1;
+          }
+          i++;
+        }
+        
+        var forwardDiagonalScore = 0;
+        for(; startColumn < endColumn; startColumn++)
+        {
+          if (forwardDiagonalScore === 0) {
+            forwardDiagonalScore += columns[startColumn].column[startRow].score;
+          }
+              
+          else if (columns[startColumn].column[startRow].score === -1) {
+            //console.log("Adding yellow score");
+
+            if(forwardDiagonalScore > 0) {
+              forwardDiagonalScore = -1;
+            }
+            else {
+              forwardDiagonalScore += -1;
+            }
+            //console.log("Current forwardDiagonalScore " + forwardDiagonalScore);
+          }
+          else if (columns[startColumn].column[startRow].score === 1) {
+            //console.log("Adding yellow score");
+            if(forwardDiagonalScore > 0) {
+              forwardDiagonalScore += 1;
+            }
+            else {
+              forwardDiagonalScore = 1;
+            }
+            //console.log("Current row score " + forwardDiagonalScore);
+          }
+              
+          if (forwardDiagonalScore === 4) {
+            console.log("Red player wins");
+            gameOver("red");
+            break;
+          }
+          if (forwardDiagonalScore === -4) {
+            console.log("Yellow player wins");
+            gameOver("yellow");
+            break;
+          }
+          startRow--;
+        }
+        
+        startColumn = column;
+        endColumn = column;
+        startRow = row;
+        endRow = row;
+        i = 0;
+        while(i < 3)
+        {
+          if((startColumn - 1) >= 0 && (startRow - 1) >= 0){
+            startColumn -=1;
+            startRow -=1;
+          }
+          if((endColumn + 1) < columns.length && (endRow + 1) < columns.length) {
+            endColumn +=1;
+            endRow +=1;
+          }
+          i++;
+        }
+        
+        var backDiagonalScore = 0;
+        for(; startColumn < endColumn; startColumn++)
+        {
+          if (backDiagonalScore === 0) {
+            backDiagonalScore += columns[startColumn].column[startRow].score;
+          }
+              
+          else if (columns[startColumn].column[startRow].score === -1) {
+            //console.log("Adding yellow score");
+
+            if(backDiagonalScore > 0) {
+              backDiagonalScore = -1;
+            }
+            else {
+              backDiagonalScore += -1;
+            }
+            //console.log("Current backDiagonalScore " + backDiagonalScore);
+          }
+          else if (columns[startColumn].column[startRow].score === 1) {
+            //console.log("Adding yellow score");
+            if(backDiagonalScore > 0) {
+              backDiagonalScore += 1;
+            }
+            else {
+              forwardDiagonalScore = 1;
+            }
+            //console.log("Current row score " + backDiagonalScore);
+          }
+              
+          if (backDiagonalScore === 4) {
+            console.log("Red player wins");
+            gameOver("red");
+            break;
+          }
+          if (backDiagonalScore === -4) {
+            console.log("Yellow player wins");
+            gameOver("yellow");
+            break;
+          }
+          startRow++;
+        }
+        
+        // Check for draw    
+        
+        if(spotsLeft === 0)
+        {
+          gameOver("draw");
+          console.log("It's a draw!!!!!!");
+        }
+      }
+      
+      function gameOver(winner) {
+        switch (winner) {
+          case "yellow":
+            var winnerText = document.getElementById("winner");
+            winnerText.textContent = "Yellow won! Press enter to start another game."
+            break;
+          case "red":
+            var winnerText = document.getElementById("winner");
+            winnerText.textContent = "Red won! Press enter to start another game."
+            break;
+          case "draw":
+            var winnerText = document.getElementById("winner");
+            winnerText.textContent = "Draw! Press enter to start another game."
+            break;   
+        }
+        // Reset window event
+        window.removeEventListener('keydown', initKeyDownEvents);
+        gameOverEventListenerChanges();
+      }
+      
+      function initKeyDownEvents(event){
+        switch ( event.keyCode ) {
+						case 37: // Left
+							if (currentColumn > 0)
+              {
+                changeColumnToWhite();
+                currentColumn -= 1;
+              }
+              changeColumnToBlue();
+							break;
+            
+            case 39: //Right 
+              if (currentColumn < 6)
+              {
+                changeColumnToWhite();
+                currentColumn += 1;
+              }
+              //Switch column color
+              changeColumnToBlue();
+							break;
+              
+            case 13: // Enter
+              var dropLocation = columns[currentColumn].column.length - 1;
+              console.log("Drop location: " + dropLocation);
+              while (dropLocation >= 0) {
+                //console.log(columns[currentColumn]);
+                if (columns[currentColumn].column[dropLocation].score === 0){
+                  if(currentPlayer === "yellow") {
+                    columns[currentColumn].column[dropLocation].mesh.material.color.setHex(0xffff00);
+                    columns[currentColumn].column[dropLocation].score = -1;
+                    columns[currentColumn].score -= 1;
+                    currentPlayer = "red";
+                    yellowAudioElement.play();
+                  }
+                  else {
+                    columns[currentColumn].column[dropLocation].mesh.material.color.setHex(0xff0000);
+                    columns[currentColumn].column[dropLocation].score = 1;
+                    columns[currentColumn].score += 1;
+                    currentPlayer = "yellow";
+                    redAudioElement.play();
+                  }
+                  
+                  spotsLeft--;
+                  checkScore(currentColumn, dropLocation);
+                  break;
+                }
+                else {
+                  dropLocation -= 1;
+                }
+              }
+              break;
+					}
+      }
+      function gameOverEventListenerChanges() {
+        window.addEventListener( 'keydown', function ( event ) {
+          switch(event.keyCode){
+            case 13: // Enter
+              location.reload();
+              break;
+            case 37:
+              break;
+            case 39:
+              break;
+          }
+        });
+      }
+		</script>
+	</body>
+</html>                                  
