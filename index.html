@@ -1,43 +1,43 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset=utf-8>
-		<title>Connect 4</title>
-		<style>
-			body { margin: 0; }
-			canvas { width: 100%; height: 100% }
-		</style>
-	</head>
-	<body>
+  <head>
+    <meta charset=utf-8>
+    <title>Connect 4</title>
+    <style>
+      body { margin: 0; }
+      canvas { width: 100%; height: 100% }
+    </style>
+  </head>
+  <body>
     <h1 id="winner"> </h1>
-		<script src="js/three.js"></script>
-		<script>
-			// Our Javascript will go here.
-      var camera, scene, renderer, geometry, material, cylinder, group, column, columns, currentColumn, currentPlayer, rotation, spotsLeft, yellowAudioElement, yellowAudioSource, redAudioElement, redAudioSource; 
-      
+    <script src="js/three.js"></script>
+    <script>
+      // Our Javascript will go here.
+      var camera, scene, renderer, geometry, material, cylinder, group, column, columns, currentColumn, currentPlayer, rotation, spotsLeft, yellowAudioElement, yellowAudioSource, redAudioElement, redAudioSource;
+
       init();
-			animate();
-      
+      animate();
+
       function init() {
         scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 200 );
         camera.position.y = 75;
         camera.lookAt(new THREE.Vector3(0, 0, 0));
         renderer = new THREE.WebGLRenderer();
-        
+
         renderer.setSize( window.innerWidth, window.innerHeight );
         document.body.appendChild( renderer.domElement );
-        
+
         rotation = "positive";
         spotsLeft = 42;
-        
+
         columns = new Array();
-        
+
         //Add axis helper green-y red-x blue-z
         //var axisHelper = new THREE.AxisHelper( 25 );
         //scene.add( axisHelper );
-        
-        // Create objects 
+
+        // Create objects
         for (var x = 0; x < 7; x++){
           column = new Array();
           for (var z = 0; z< 6; z++){
@@ -47,34 +47,34 @@
             cylinder.position.x = x*10 + -30;
             cylinder.position.z = z*10 + -25;
             scene.add( cylinder );
-            column.push({mesh:cylinder, score:0});         
+            column.push({mesh:cylinder, score:0});
           }
           columns.push({column:column, score:0});
         }
-        
-        //Initialize player to yellow 
+
+        //Initialize player to yellow
         currentPlayer = "yellow";
-        
+
         //Set first column to blue
         currentColumn = 0;
-        
+
         changeColumnToBlue();
-        
+
         //Add event listeners
         window.addEventListener( 'keydown', initKeyDownEvents);
-        
+
         //Create sound sources
         yellowAudioElement = document.createElement('audio');
         yellowAudioSource = document.createElement('source');
         yellowAudioSource.src = 'sounds/yellowSound.mp3';
         yellowAudioElement.appendChild(yellowAudioSource);
-        
+
         redAudioElement = document.createElement('audio');
         redAudioSource = document.createElement('source');
         redAudioSource.src = 'sounds/redSound.mp3';
         redAudioElement.appendChild(redAudioSource);
       }
-      
+
       function changeColumnToWhite() {
         columns[currentColumn].column.forEach(function(item, index, array){
           if(item.score === 0)
@@ -83,7 +83,7 @@
           }
         });
       }
-      
+
       function changeColumnToBlue() {
         columns[currentColumn].column.forEach(function(item, index, array){
           if(item.score === 0)
@@ -92,13 +92,13 @@
           }
         });
       }
-      
+
       function animate() {
         requestAnimationFrame( animate );
         rotate();
         renderer.render( scene, camera );
       }
-      
+
       function rotate() {
         if (rotation === "positive") {
           scene.rotation.z += 0.005;
@@ -113,7 +113,7 @@
           }
         }
       }
-      
+
       function checkScore(column, row) {
       console.log("Checking score");
         // Check current column
@@ -123,7 +123,7 @@
             if (columnScore === 0) {
               columnScore += columns[column].column[currentObject].score;
             }
-            
+
             else if (columns[column].column[currentObject].score === -1) {
               //console.log("Adding yellow score");
 
@@ -135,7 +135,7 @@
               }
               //console.log("Current score " + columnScore);
             }
-            
+
             else if (columns[column].column[currentObject].score === 1) {
               //console.log("Adding yellow score");
               if(columnScore > 0) {
@@ -145,7 +145,7 @@
                 columnScore = 1;
               }
             }
-            
+
             if (columnScore === 4) {
               console.log("Red player wins");
               gameOver("red");
@@ -155,10 +155,10 @@
               console.log("Yellow player wins");
               gameOver("yellow");
               break;
-            }          
+            }
           }
-        })(); 
-           
+        })();
+
         (function(){
           var rowScore = 0;
           var startColumn = 0;
@@ -167,7 +167,7 @@
           {
             startColumn = column -3;
           }
-          
+
           if((column + 3) <= endColumn)
           {
             endColumn = column + 3;
@@ -176,7 +176,7 @@
             if (rowScore === 0) {
               rowScore += columns[currentObject].column[row].score;
             }
-            
+
             else if (columns[currentObject].column[row].score === -1) {
               //console.log("Adding yellow score");
 
@@ -188,7 +188,7 @@
               }
               //console.log("Current row score " + rowScore);
             }
-            
+
             else if (columns[currentObject].column[row].score === 1) {
               console.log("Adding yellow score");
               if(rowScore > 0) {
@@ -199,7 +199,7 @@
               }
               //console.log("Current row score " + rowScore);
             }
-            
+
             if (rowScore === 4) {
               console.log("Red player wins");
               gameOver("red");
@@ -209,10 +209,10 @@
               console.log("Yellow player wins");
               gameOver("yellow");
               break;
-            }          
+            }
           }
         })();
-      
+
         // Check forward diagonals..........................
         var startColumn = column;
         var endColumn = column;
@@ -231,14 +231,14 @@
           }
           i++;
         }
-        
+
         var forwardDiagonalScore = 0;
         for(; startColumn < endColumn; startColumn++)
         {
           if (forwardDiagonalScore === 0) {
             forwardDiagonalScore += columns[startColumn].column[startRow].score;
           }
-              
+
           else if (columns[startColumn].column[startRow].score === -1) {
             //console.log("Adding yellow score");
 
@@ -260,7 +260,7 @@
             }
             //console.log("Current row score " + forwardDiagonalScore);
           }
-              
+
           if (forwardDiagonalScore === 4) {
             console.log("Red player wins");
             gameOver("red");
@@ -273,7 +273,7 @@
           }
           startRow--;
         }
-        
+
         startColumn = column;
         endColumn = column;
         startRow = row;
@@ -291,14 +291,14 @@
           }
           i++;
         }
-        
+
         var backDiagonalScore = 0;
         for(; startColumn < endColumn; startColumn++)
         {
           if (backDiagonalScore === 0) {
             backDiagonalScore += columns[startColumn].column[startRow].score;
           }
-              
+
           else if (columns[startColumn].column[startRow].score === -1) {
             //console.log("Adding yellow score");
 
@@ -320,7 +320,7 @@
             }
             //console.log("Current row score " + backDiagonalScore);
           }
-              
+
           if (backDiagonalScore === 4) {
             console.log("Red player wins");
             gameOver("red");
@@ -333,16 +333,16 @@
           }
           startRow++;
         }
-        
-        // Check for draw    
-        
+
+        // Check for draw
+
         if(spotsLeft === 0)
         {
           gameOver("draw");
           console.log("It's a draw!!!!!!");
         }
       }
-      
+
       function gameOver(winner) {
         switch (winner) {
           case "yellow":
@@ -356,25 +356,25 @@
           case "draw":
             var winnerText = document.getElementById("winner");
             winnerText.textContent = "Draw! Press enter to start another game."
-            break;   
+            break;
         }
         // Reset window event
         window.removeEventListener('keydown', initKeyDownEvents);
         gameOverEventListenerChanges();
       }
-      
+
       function initKeyDownEvents(event){
         switch ( event.keyCode ) {
-						case 37: // Left
-							if (currentColumn > 0)
+            case 37: // Left
+              if (currentColumn > 0)
               {
                 changeColumnToWhite();
                 currentColumn -= 1;
               }
               changeColumnToBlue();
-							break;
-            
-            case 39: //Right 
+              break;
+
+            case 39: //Right
               if (currentColumn < 6)
               {
                 changeColumnToWhite();
@@ -382,8 +382,8 @@
               }
               //Switch column color
               changeColumnToBlue();
-							break;
-              
+              break;
+
             case 13: // Enter
               var dropLocation = columns[currentColumn].column.length - 1;
               console.log("Drop location: " + dropLocation);
@@ -404,7 +404,7 @@
                     currentPlayer = "yellow";
                     redAudioElement.play();
                   }
-                  
+
                   spotsLeft--;
                   checkScore(currentColumn, dropLocation);
                   break;
@@ -414,7 +414,7 @@
                 }
               }
               break;
-					}
+          }
       }
       function gameOverEventListenerChanges() {
         window.addEventListener( 'keydown', function ( event ) {
@@ -429,6 +429,6 @@
           }
         });
       }
-		</script>
-	</body>
-</html>                                  
+    </script>
+  </body>
+</html>
